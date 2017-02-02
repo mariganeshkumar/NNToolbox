@@ -1,6 +1,6 @@
 import numpy as np
 
-from Utility.CommonUtilityFunctions import ValidateDimensionsWithBiasAndOutput, ValidateDimensionsWithOutput, \
+from src.Utility.CommonUtilityFunctions import ValidateDimensionsWithBiasAndOutput, ValidateDimensionsWithOutput, \
     ValidateDimensionsWithBias, ValidateDimensions, IntergrateBiasWithWeightsAndData
 
 
@@ -34,37 +34,43 @@ def TanSigmoid(data,weights,validationRequired=True):
 #######################################Sigmoid Gradiants###############################################################
 
 
-def LogSigmoidGradientsWithBias(data,weights,biases,output,validationRequired=True):
+def LogSigmoidGradientsWithBias(data, weights, biases, gradients, validationRequired=True,biasRequired=True):
     if validationRequired:
-        ValidateDimensionsWithBiasAndOutput(data, weights, biases, output)
+        ValidateDimensionsWithBiasAndOutput(data, weights, biases, gradients)
     data,weightsWithBias= IntergrateBiasWithWeightsAndData(data, weights, biases)
-    gradients= LogSigmoidGradients(data,weightsWithBias,output,False)
-    weightsGradients=gradients[:,0:weights.shape[1]]
-    biasesGradients = gradients[:, weights.shape[1]:weights.shape[1]+1]
-    return weightsGradients,biasesGradients
+    gradients= LogSigmoidGradients(data, weightsWithBias, gradients, False)
+    if biasRequired:
+        weightsGradients=gradients[:,0:weights.shape[1]]
+        biasesGradients = gradients[:, weights.shape[1]:weights.shape[1]+1]
+        return weightsGradients,biasesGradients
+    else:
+        return gradients
 
 
-def LogSigmoidGradients(data, weights, output, validationRequired=True):
+def LogSigmoidGradients(data, weights, gradients, validationRequired=True):
     if validationRequired:
-        ValidateDimensionsWithOutput(data, weights, output)
+        ValidateDimensionsWithOutput(data, weights, gradients)
     activations=LogSigmoid(data,weights,False)
-    return np.matmul(np.multiply(np.multiply((activations - output),activations),(1-activations)),np.transpose(data))
+    return np.matmul(np.multiply(np.multiply( gradients, activations), (1 - activations)), np.transpose(data))
 
-def TanSigmoidGradientsWithBias(data,weights,biases,output,validationRequired=True):
+def TanSigmoidGradientsWithBias(data, weights, biases, gradients, validationRequired=True, biasRequired=True):
     if validationRequired:
-        ValidateDimensionsWithBiasAndOutput(data, weights, biases, output)
+        ValidateDimensionsWithBiasAndOutput(data, weights, biases, gradients)
     data,weightsWithBias= IntergrateBiasWithWeightsAndData(data, weights, biases)
-    gradients= TanSigmoidGradients(data,weightsWithBias,output,False)
-    weightsGradients=gradients[:,0:weights.shape[1]]
-    biasesGradients = gradients[:, weights.shape[1]:weights.shape[1]+1]
-    return weightsGradients,biasesGradients
+    gradients= TanSigmoidGradients(data, weightsWithBias, gradients, False)
+    if biasRequired:
+        weightsGradients=gradients[:,0:weights.shape[1]]
+        biasesGradients = gradients[:, weights.shape[1]:weights.shape[1]+1]
+        return weightsGradients,biasesGradients
+    else:
+        return gradients
 
 
-def TanSigmoidGradients(data, weights, output, validationRequired=True):
+def TanSigmoidGradients(data, weights, gradients, validationRequired=True):
     if validationRequired:
-        ValidateDimensionsWithOutput(data, weights, output)
+        ValidateDimensionsWithOutput(data, weights, gradients)
     activations=TanSigmoid(data,weights,False)
-    return np.matmul(np.multiply(np.multiply((activations - output),(1+activations)),(1-activations)),np.transpose(data))
+    return np.matmul(np.multiply(np.multiply(gradients, (1 + activations)), (1 - activations)), np.transpose(data))
 
 
 #######################################################################################################################
