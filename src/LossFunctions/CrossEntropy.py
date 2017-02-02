@@ -1,7 +1,21 @@
 import numpy as np
+from src.OutputFunctions import SoftMax
+
+def CrossEntropyWithSoftMaxAndBias(data,weights,biases,targetOutput):
+    #targetOutput=#noOfClasses*#noOfExamples outputActivafrom OutputFunctions import SoftMaxtion=#noOfClasses*#noOfExamples
+    #todo : Add a dimension check and set dimension check to false in softmax call
+    outputActivations=SoftMax.SoftMaxWithBias(data,weights,biases)
+    return -np.mean(np.diag(np.matmul(np.transpose(targetOutput),np.log(outputActivations))))
+
+def CrossEntropyWithSoftMax(data,weights,targetOutput):
+    #targetOutput=#noOfClasses*#noOfExamples outputActivafrom OutputFunctions import SoftMaxtion=#noOfClasses*#noOfExamples
+    #todo : Add a dimension check and set dimension check to false in softmax call
+    outputActivations=SoftMax.SoftMaxWithBias(data,weights)
+    return -np.mean(np.diag(np.matmul(np.transpose(targetOutput),np.log(outputActivations))))
 
 
-def SquaredError(outputActivations,targetOutput):
-    #targetOutput=#noOfClasses*#noOfExamples outputActivation=#noOfClasses*#noOfExamples
-    #todo : Add a dimension check
-    return np.mean(np.diag(np.matmul(np.transpose(targetOutput),np.log(outputActivations))))
+def CrossEntropyWithSoftMaxGradients(data,weights,biases,targetOutput):
+    #targetOutput=#noOfClasses*#noOfExamples outputActivafrom OutputFunctions import SoftMaxtion=#noOfClasses*#noOfExamples
+    #todo : Add a dimension check and set dimension check to false in softmax call
+    outputActivations=SoftMax.SoftMaxWithBias(data,weights,biases)
+    return -(targetOutput-outputActivations)

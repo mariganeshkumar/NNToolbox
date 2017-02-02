@@ -1,9 +1,9 @@
 import numpy as np
-from Utility import CommonUtilityFunctions as cuf
+from src.Utility import CommonUtilityFunctions as cuf
 
 
 def SoftMax(data, weights):
-    preActivation=weights*data
+    preActivation=np.matmul(weights,data)
     return np.divide(np.exp(preActivation),np.sum(np.exp(preActivation), axis=0))
 
 
