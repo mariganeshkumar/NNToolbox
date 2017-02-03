@@ -10,6 +10,7 @@ class Network:
 
     def __init__(self, hiddenLayers, activationFunctions, outputFunction, lossFunction, noOfInputs, noOfOutputs):
         self.hiddenLayers = hiddenLayers
+        self.noOfLayers = len(hiddenLayers)
         self.activationFunctions = activationFunctions
         self.outputFunction = outputFunction
         self.lossFunction=lossFunction
@@ -52,32 +53,31 @@ class Network:
     def FeedForward(self,data):
         layersOutputs=[data]
         data = cuf.IntergrateBiasAndData(data)
-        for i in range(0,len(self.hiddenLayers)):
+        for i in range(0,self.noOfLayers):
             data=self.Activation[self.activationFunctions[i]](data,self.weights[i])
             layersOutputs.append(data)
             data = cuf.IntergrateBiasAndData(data)
 
-        return  self.OutputFunction[self.outputFunction](data,self.weights[len(self.hiddenLayers)]),layersOutputs
+        return  self.OutputFunction[self.outputFunction](data,self.weights[self.noOfLayers]),layersOutputs
 
 
 
-    def BackProbGradients(self,data,output):
-        networkOuput,layerOutputs=self.FeedForward(data)
-        weightGradients=[None]*(len(self.hiddenLayers)+1)
+    def BackProbGradients(self,output, networkOutput, layerOutputs):
+        weightGradients=[None]*(self.noOfLayers+1)
         if self.outputFunction == "SoftMax" and self.lossFunction=="CrossEntropy":
-            gradientsWRTActivation=self.LossAndOutputGradients['CrossEntropyWithSoftMax'](networkOuput,output)
-            weightGradients[len(self.hiddenLayers)]=np.matmul(gradientsWRTActivation,
+            gradientsWRTActivation=self.LossAndOutputGradients['CrossEntropyWithSoftMax'](networkOutput, output)
+            weightGradients[self.noOfLayers]=np.matmul(gradientsWRTActivation,
                                                               np.transpose(
                                                                   cuf.IntergrateBiasAndData(
-                                                                      layerOutputs[len(self.hiddenLayers)])))
+                                                                      layerOutputs[self.noOfLayers])))
         else:
-            gradientsWRTActivation = self.LossGradients[self.lossFunction](networkOuput, output)
-            gradientsWRTActivation = self.OutputGradients[self.outputFunction](networkOuput,gradientsWRTActivation)
-            weightGradients[len(self.hiddenLayers)] = np.matmul(gradientsWRTActivation,
+            gradientsWRTActivation = self.LossGradients[self.lossFunction](networkOutput, output)
+            gradientsWRTActivation = self.OutputGradients[self.outputFunction](networkOutput, gradientsWRTActivation)
+            weightGradients[self.noOfLayers] = np.matmul(gradientsWRTActivation,
                                                                 np.transpose(
                                                                     cuf.IntergrateBiasAndData(
-                                                                        layerOutputs[len(self.hiddenLayers)])))
-        for i in reversed(range(0,len(self.hiddenLayers))):
+                                                                        layerOutputs[self.noOfLayers])))
+        for i in reversed(range(0,self.noOfLayers)):
             backProbGradient=np.matmul(np.transpose(cuf.DisIntergrateBiasFromWeights(self.weights[i+1])),
                                                                 gradientsWRTActivation)
             gradientsWRTActivation=self.ActivationGradients[self.activationFunctions[i]](
@@ -88,8 +88,9 @@ class Network:
 
     def BatchGradientDecent(self,data,output,eta,itr):
         for i in range(0,itr):
-            gradients = self.BackProbGradients(data, output)
-            for j in range(0,len(self.hiddenLayers)+1):
+            networkOutput,layerOutputs = self.FeedForward(data)
+            print('Loss:', self.LossFunction[self.lossFunction](networkOutput, output))
+            gradients = self.BackProbGradients(output,networkOutput,layerOutputs)
+            for j in range(0,self.noOfLayers+1):
                 self.weights[j]=self.weights[j]-eta*gradients[j]
-            currentnetworkop,_=self.FeedForward(data)
-            print('Loss:',self.LossFunction[self.lossFunction](currentnetworkop,output))
+
