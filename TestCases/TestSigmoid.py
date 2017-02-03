@@ -9,7 +9,7 @@ layer1=Sigmoid.LogSigmoidWithBias(data, weights, biases)
 outputGradients=output-layer1
 gradientsWRTActivation=Sigmoid.LogSigmoidGradients(layer1, outputGradients)
 gradientsWRTWEights=np.matmul(gradientsWRTActivation,np.transpose(cuf.IntergrateBiasAndData(data)))
-weightsGradients,biasesGradients=cuf.DisIntergrateBiasFromWeights(gradientsWRTWEights)
+weightsGradients,biasesGradients=cuf.DisIntergrateBiasFromWeights(gradientsWRTWEights,biasRequired=True)
 print(layer1)
 print('present l2 loss',np.linalg.norm(output-layer1))
 for i in range(0,500000):
@@ -19,7 +19,7 @@ for i in range(0,500000):
     outputGradients=layer1-output
     gradientsWRTActivation=Sigmoid.LogSigmoidGradients(layer1, outputGradients)
     gradientsWRTWEights=np.matmul(gradientsWRTActivation,np.transpose(cuf.IntergrateBiasAndData(data)))
-    weightsGradients,biasesGradients=cuf.DisIntergrateBiasFromWeights(gradientsWRTWEights)
+    weightsGradients,biasesGradients=cuf.DisIntergrateBiasFromWeights(gradientsWRTWEights,biasRequired=True)
     #print(output-layer1)
     #print('wg',weightsGradients,'bg',biasesGradients)
     print('present l2 loss',np.linalg.norm(output-layer1))
