@@ -1,5 +1,5 @@
 import numpy as np
-from Utility import CommonUtilityFunctions as cuf
+from src.Utility import CommonUtilityFunctions as cuf
 
 
 def PureLin(data, weights):

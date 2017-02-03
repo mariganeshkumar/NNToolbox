@@ -56,9 +56,13 @@ def IntergrateBiasWithWeights(weights,biases):
     weights = np.append(weights, biases, axis=1)
     return weights
 
-def DisIntergrateBiasFromWeights(weights):
+def DisIntergrateBiasFromWeights(weights,biasRequired=False):
     # Output: Weights is Dim(L)*Dim(L-1)+1
     # Input: Weights is Dim(L)*Dim(L-1), Biases is Dim(L-1)*1
     weightsWithoutBias=weights[:,0:weights.shape[1]-1]
-    biases=weights[:,-1]
-    return weightsWithoutBias,biases
+    biases=weights[:,weights.shape[1]-1]
+    biases=np.transpose(np.array([biases]))
+    if biasRequired:
+        return weightsWithoutBias,biases
+    else:
+        return weightsWithoutBias
