@@ -35,16 +35,17 @@ class Network:
             'PureLin': PureLin.PureLin,
         }
         self.LossFunction = {
-            'CrossEntropy':CrossEntropy.CrossEntropy
+            'CrossEntropy':CrossEntropy.CrossEntropy,
+            'SquaredError': SquaredError.SquaredError,
         }
         self.LossAndOutputGradients = {
             'CrossEntropyWithSoftMax': CrossEntropy.CrossEntropyWithSoftMaxGradients
         }
         self.LossGradients = {
-            'CrossEntropyWithSoftMax': CrossEntropy.CrossEntropyWithSoftMaxGradients
+            'SquaredError': SquaredError.SquaredErrorGradients,
         }
         self.OutputGradients = {
-            'CrossEntropyWithSoftMax': CrossEntropy.CrossEntropyWithSoftMaxGradients
+            'PureLin': PureLin.PureLinGradients
         }
 
 
@@ -63,7 +64,6 @@ class Network:
     def BackProbGradients(self,data,output):
         networkOuput,layerOutputs=self.FeedForward(data)
         weightGradients=[None]*(len(self.hiddenLayers)+1)
-        #gradientsWRTActivation = [None] * (len(self.hiddenLayers) + 1)
         if self.outputFunction == "SoftMax" and self.lossFunction=="CrossEntropy":
             gradientsWRTActivation=self.LossAndOutputGradients['CrossEntropyWithSoftMax'](networkOuput,output)
             weightGradients[len(self.hiddenLayers)]=np.matmul(gradientsWRTActivation,
@@ -71,7 +71,12 @@ class Network:
                                                                   cuf.IntergrateBiasAndData(
                                                                       layerOutputs[len(self.hiddenLayers)])))
         else:
-            pass
+            gradientsWRTActivation = self.LossGradients[self.lossFunction](networkOuput, output)
+            gradientsWRTActivation = self.OutputGradients[self.outputFunction](networkOuput,gradientsWRTActivation)
+            weightGradients[len(self.hiddenLayers)] = np.matmul(gradientsWRTActivation,
+                                                                np.transpose(
+                                                                    cuf.IntergrateBiasAndData(
+                                                                        layerOutputs[len(self.hiddenLayers)])))
         for i in reversed(range(0,len(self.hiddenLayers))):
             backProbGradient=np.matmul(np.transpose(cuf.DisIntergrateBiasFromWeights(self.weights[i+1])),
                                                                 gradientsWRTActivation)
