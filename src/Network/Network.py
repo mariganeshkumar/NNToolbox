@@ -19,11 +19,11 @@ class Network:
         self.noOfOutputs = noOfOutputs
         np.random.seed(seed=1234)
         self.weights=[]
-        self.weights.append(np.random.rand(hiddenLayers[0], noOfInputs + 1))
+        self.weights.append(0.1*np.random.randn(hiddenLayers[0], noOfInputs + 1))
         self.logDir=logDir
         for i in range(1, len(hiddenLayers)):
-            self.weights.append(np.random.rand(hiddenLayers[i], hiddenLayers[i - 1] + 1))
-        self.weights.append(np.random.rand(noOfOutputs, hiddenLayers[-1]+1))
+            self.weights.append(0.1*np.random.randn(hiddenLayers[i], hiddenLayers[i - 1] + 1))
+        self.weights.append(0.1*np.random.randn(noOfOutputs, hiddenLayers[-1]+1))
 
         self.Activation = {
             'LogSigmoid': Sigmoid.LogSigmoid,
@@ -88,15 +88,67 @@ class Network:
                                                 np.transpose(cuf.IntergrateBiasAndData(layerOutputs[i])))
         return weightGradients
 
-    def BatchGradientDecent(self,data,output,eta,itr):
+    def BatchGradientDecent(self, trainData, trainTargets, eta, itr,valData=None,valTargets=None,testData=None,testTargets=None):
         for i in range(0,itr):
-            networkOutput,layerOutputs = self.FeedForward(data)
-            print('Loss:', self.LossFunction[self.lossFunction](networkOutput, output))
-            gradients = self.BackProbGradients(output,networkOutput,layerOutputs)
+            networkOutput,layerOutputs = self.FeedForward(trainData)
+            print('Loss:', self.LossFunction[self.lossFunction](networkOutput, trainTargets))
+            gradients = self.BackProbGradients(trainTargets, networkOutput, layerOutputs)
             for j in range(0,self.noOfLayers+1):
                 self.weights[j]=self.weights[j]-eta*gradients[j]
             if self.logDir!=None:
-                self.WriteLog(data,output,i,i,eta)
+                self.WriteLog(trainData, trainTargets, i, i, eta, valData, valTargets, testData, testTargets)
+
+    def MiniBatchGradientDecent(self, trainData, trainTargets, eta, itr, batchSize, valData=None, valTargets=None,
+                            testData=None, testTargets=None):
+        batchStart=0
+        step = 0
+        epoch = 0
+
+        for i in range(0, itr):
+            #batchSelection=np.random.choice(np.arange(trainData.shape[1]), batchSize)
+            step=step+1
+            batchData=trainData[:,batchStart:batchStart+batchSize]
+            batchTargets=trainTargets[:,batchStart:batchStart+batchSize]
+            batchStart=batchSize+batchStart
+            if(batchStart>trainData.shape[1]):
+                epoch=epoch+1
+                batchStart= batchStart-trainData.shape[1]
+                step=0
+            networkOutput, layerOutputs = self.FeedForward(batchData)
+            print('Loss:', self.LossFunction[self.lossFunction](networkOutput, batchTargets))
+            gradients = self.BackProbGradients(batchTargets, networkOutput, layerOutputs)
+            for j in range(0, self.noOfLayers + 1):
+                self.weights[j] = self.weights[j] - eta/batchSize * gradients[j]
+            if self.logDir != None and step%100==0:
+                self.WriteLog(trainData, trainTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
+
+    def MiniBatchGradientDecentWithMomentum(self, trainData, trainTargets,  itr, batchSize, eta=0.5,gamma=0.5, valData=None,
+                                valTargets=None,
+                                testData=None, testTargets=None):
+        deltaWeights=[None]* (self.noOfLayers+1)
+        batchStart = 0
+        step = 0
+        epoch = 0
+        for i in range(0, itr):
+            step = step + 1
+            batchData = trainData[:, batchStart:batchStart + batchSize]
+            batchTargets = trainTargets[:, batchStart:batchStart + batchSize]
+            batchStart = batchSize + batchStart
+            networkOutput, layerOutputs = self.FeedForward(batchData)
+            print('Loss:', self.LossFunction[self.lossFunction](networkOutput, batchTargets))
+            gradients = self.BackProbGradients(batchTargets, networkOutput, layerOutputs)
+            for j in range(0, self.noOfLayers + 1):
+                if deltaWeights[j] == None:
+                    deltaWeights[j]= eta / batchSize * gradients[j]
+                else:
+                    deltaWeights[j] = eta / batchSize * gradients[j] + gamma *deltaWeights[j]
+                self.weights[j] = self.weights[j] - deltaWeights[j]
+            if self.logDir != None and step%100==0:
+                self.WriteLog(trainData, trainTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
+            if (batchStart > trainData.shape[1]):
+                epoch = epoch + 1
+                batchStart = batchStart - trainData.shape[1]
+                step=0
 
 
 
@@ -124,9 +176,9 @@ class Network:
             output, _ = self.FeedForward(testData)
             loss = self.LossFunction[self.lossFunction](output, testTargets)
             eer = self.accuracy(output, testTargets)
-            filename = self.logDir + '/log_loss_valid.txt'
+            filename = self.logDir + '/log_loss_test.txt'
             self.WriteLossLog(epoch, step, loss, lr, filename)
-            filename = self.logDir + '/log_err_valid.txt'
+            filename = self.logDir + '/log_err_test.txt'
             self.WriteEERLog(epoch, step, eer, lr, filename)
 
     def WriteLossLog(self,epoch,step,loss,lr,filename):
