@@ -1,6 +1,7 @@
 import numpy as np
 from src.Network import Network
 from src.MnistHandler import MnistHandler as mh
+from src.Optimizers import GradientBasedOptimizers as gbo
 
 
 
@@ -17,6 +18,7 @@ testLabels=testData[1]
 testData=np.transpose(testData[0])
 testTargets = np.transpose(np.eye(len(np.unique(testLabels)))[testLabels])
 net = Network.Network([200, 200 ],['LogSigmoid','LogSigmoid'],'SoftMax','CrossEntropy',784,10,'/tmp')
-net.MiniBatchGradientDecentWithMomentum(trainData,trainTargets,20000,200,eta=0.8,gamma=0.2,
-                                        valData=valData,valTargets=valTargets,testData=testData,testTargets=testTargets)
+gbo.MiniBatchGradientDecentWithMomentum(net,trainData,trainTargets,20000,200,eta=1.5,gamma=0.1,
+                                        valData=valData,valTargets=valTargets,testData=testData,testTargets=testTargets,
+                                        annel=True)
 print (valData.shape)

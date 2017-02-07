@@ -1,9 +1,10 @@
 import numpy as np
 
 from src.Activations import Sigmoid
+from src.LossFunctions import CrossEntropy,SquaredError
 from src.OutputFunctions import SoftMax,PureLin
 from src.Utility import CommonUtilityFunctions as cuf
-from src.LossFunctions import CrossEntropy,SquaredError
+
 
 class Network:
 
@@ -122,33 +123,7 @@ class Network:
             if self.logDir != None and step%100==0:
                 self.WriteLog(trainData, trainTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
 
-    def MiniBatchGradientDecentWithMomentum(self, trainData, trainTargets,  itr, batchSize, eta=0.5,gamma=0.5, valData=None,
-                                valTargets=None,
-                                testData=None, testTargets=None):
-        deltaWeights=[None]* (self.noOfLayers+1)
-        batchStart = 0
-        step = 0
-        epoch = 0
-        for i in range(0, itr):
-            step = step + 1
-            batchData = trainData[:, batchStart:batchStart + batchSize]
-            batchTargets = trainTargets[:, batchStart:batchStart + batchSize]
-            batchStart = batchSize + batchStart
-            networkOutput, layerOutputs = self.FeedForward(batchData)
-            print('Loss:', self.LossFunction[self.lossFunction](networkOutput, batchTargets))
-            gradients = self.BackProbGradients(batchTargets, networkOutput, layerOutputs)
-            for j in range(0, self.noOfLayers + 1):
-                if deltaWeights[j] == None:
-                    deltaWeights[j]= eta / batchSize * gradients[j]
-                else:
-                    deltaWeights[j] = eta / batchSize * gradients[j] + gamma *deltaWeights[j]
-                self.weights[j] = self.weights[j] - deltaWeights[j]
-            if self.logDir != None and step%100==0:
-                self.WriteLog(trainData, trainTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
-            if (batchStart > trainData.shape[1]):
-                epoch = epoch + 1
-                batchStart = batchStart - trainData.shape[1]
-                step=0
+
 
 
 
@@ -194,6 +169,5 @@ class Network:
     def accuracy(self,predictions, labels):
         return (100.0 * np.sum(np.argmax(predictions, 0) != np.argmax(labels, 0))
                 / predictions.shape[1])
-
 
 

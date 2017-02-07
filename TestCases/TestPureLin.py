@@ -1,6 +1,6 @@
 import numpy as np
 from src.Network import Network
-
+from src.Optimizers import GradientBasedOptimizers as gbo
 
 data=np.array([[0.5,2.5]])
 weights=np.array([[2]])
@@ -11,6 +11,6 @@ netOutput,_=net.FeedForward(data)
 print(netOutput)
 gradients=net.BackProbGradients(data,output)
 print(gradients)
-net.BatchGradientDecent(data,output,0.1,2000)
+gbo.BatchGradientDecent(net,data,output,0.1,2000)
 netOutput,_=net.FeedForward(data)
 print(netOutput)
