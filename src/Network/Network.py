@@ -8,7 +8,8 @@ from src.LossFunctions import CrossEntropy,SquaredError
 class Network:
 
 
-    def __init__(self, hiddenLayers, activationFunctions, outputFunction, lossFunction, noOfInputs, noOfOutputs):
+    def __init__(self, hiddenLayers, activationFunctions, outputFunction, lossFunction, noOfInputs,
+                 noOfOutputs,logDir=None):
         self.hiddenLayers = hiddenLayers
         self.noOfLayers = len(hiddenLayers)
         self.activationFunctions = activationFunctions
@@ -19,6 +20,7 @@ class Network:
         np.random.seed(seed=1234)
         self.weights=[]
         self.weights.append(np.random.rand(hiddenLayers[0], noOfInputs + 1))
+        self.logDir=logDir
         for i in range(1, len(hiddenLayers)):
             self.weights.append(np.random.rand(hiddenLayers[i], hiddenLayers[i - 1] + 1))
         self.weights.append(np.random.rand(noOfOutputs, hiddenLayers[-1]+1))
@@ -93,4 +95,53 @@ class Network:
             gradients = self.BackProbGradients(output,networkOutput,layerOutputs)
             for j in range(0,self.noOfLayers+1):
                 self.weights[j]=self.weights[j]-eta*gradients[j]
+            if self.logDir!=None:
+                self.WriteLog(data,output,i,i,eta)
+
+
+
+    ####################### Todo : function to be moved out of this class#####################################################
+
+    def WriteLog(self,trainData,trainTragets,step,epoch,lr,valData=None,valTargets=None,testData=None,testTargets=None):
+        output,_=self.FeedForward(trainData)
+        loss=self.LossFunction[self.lossFunction](output, trainTragets)
+        eer = self.accuracy(output,trainTragets)
+        filename=self.logDir+'/log_loss_train.txt'
+        self.WriteLossLog(epoch,step,loss,lr,filename)
+        filename = self.logDir + '/log_err_train.txt'
+        self.WriteEERLog(epoch, step, eer, lr, filename)
+
+        if valData!=None:
+            output, _ = self.FeedForward(valData)
+            loss = self.LossFunction[self.lossFunction](output, valTargets)
+            eer = self.accuracy(output, valTargets)
+            filename = self.logDir + '/log_loss_valid.txt'
+            self.WriteLossLog(epoch, step, loss, lr, filename)
+            filename = self.logDir + '/log_err_valid.txt'
+            self.WriteEERLog(epoch, step, eer, lr, filename)
+
+        if testData!=None:
+            output, _ = self.FeedForward(testData)
+            loss = self.LossFunction[self.lossFunction](output, testTargets)
+            eer = self.accuracy(output, testTargets)
+            filename = self.logDir + '/log_loss_valid.txt'
+            self.WriteLossLog(epoch, step, loss, lr, filename)
+            filename = self.logDir + '/log_err_valid.txt'
+            self.WriteEERLog(epoch, step, eer, lr, filename)
+
+    def WriteLossLog(self,epoch,step,loss,lr,filename):
+        text_file = open(filename, "a+")
+        text_file.write("Epoch %s, Step %s, Error: %f, lr: %f \n" % (epoch, step,loss,lr))
+        text_file.close()
+
+    def WriteEERLog(self, epoch, step, eer, lr, filename):
+        text_file = open(filename, "a+")
+        text_file.write("Epoch %s, Step %s, Error: %f, lr: %f \n"  % (epoch, step, eer, lr))
+        text_file.close()
+
+    def accuracy(self,predictions, labels):
+        return (100.0 * np.sum(np.argmax(predictions, 0) != np.argmax(labels, 0))
+                / predictions.shape[1])
+
+
 
