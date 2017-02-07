@@ -9,8 +9,8 @@ biases_l2=np.array([[2],[1]])
 
 output=np.array([[0,1,0],[1,0,1]])
 
-net = Network.Network([5,5],['LogSigmoid','LogSigmoid'],'SoftMax','CrossEntropy',1,2)
+net = Network.Network([2000,2000,2000],['LogSigmoid','LogSigmoid','TanSigmoid'],'SoftMax','CrossEntropy',1,2)
 netOutput,_=net.FeedForward(data)
-net.BatchGradientDecent(data,output,0.9,200000)
+net.BatchGradientDecent(data,output,0.001,200)
 netOutput,_=net.FeedForward(data)
 print(netOutput)
