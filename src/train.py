@@ -1,34 +1,23 @@
 import numpy as np
-
+from src.Network import Network
 from MnistHandler import MnistHandler as mh
 from Activations import Sigmoid
+from OutputFunctions import SoftMax
+from LossFunctions import CrossEntropy
 
 
-ActivationWithBias = {
-  'Sigmoid.LogSigmoidWithBias': Sigmoid.LogSigmoidWithBias,
-  'Sigmoid.TanSigmoidWithBias': Sigmoid.TanSigmoidWithBias,
-}
-ActivationGradientsWithBias = {
-  'Sigmoid.LogSigmoidWithBias': Sigmoid.LogSigmoidGradientsWithBias,
-  'Sigmoid.TanSigmoidWithBias': Sigmoid.TanSigmoidGradientsWithBias,
-}
 
 trainData,validData,testData=mh.readMNISTData('../../Data/mnist.pkl.gz')
-data=np.array([[0.5,2.5]])
-weights=np.array([[2]])
-biases=np.array([[2]])
-output=np.array([[0.2 , 0.9]])
-layer1=ActivationWithBias['Sigmoid.TanSigmoidWithBias'](data, weights, biases)
-weightsGradients,biasesGradients=Sigmoid.LogSigmoidGradientsWithBias(data, weights, biases, output)
-print(layer1)
-print('wg',weightsGradients,'bg',biasesGradients)
-print('present l2 loss',np.linalg.norm(output-layer1))
-for i in range(0,50000):
-    weights=weights-0.01*weightsGradients
-    biases=biases-0.01*biasesGradients
-    layer1=Sigmoid.TanSigmoidWithBias(data, weights, biases)
-    weightsGradients,biasesGradients=Sigmoid.TanSigmoidGradientsWithBias(data, weights, biases, output)
-    #print(output-layer1)
-    #print('wg',weightsGradients,'bg',biasesGradients)
-    print('present l2 loss',np.linalg.norm(output-layer1))
-print('weights:',weights,'biases',biases)
+data=np.array([[0.5,3,0.1]])
+weights_l1=np.array([[2],[3]])
+biases_l1=np.array([[2],[1]])
+weights_l2=np.array([[2,2],[3,3]])
+biases_l2=np.array([[2],[1]])
+
+output=np.array([[0,1,0],[1,0,1]])
+net = Network.Network([2, 2],['LogSigmoid','LogSigmoid'],'PureLin','SquaredError',1,2)
+
+
+net.BatchGradientDecent(data,output,0.8,20000)
+netOutput,_=net.FeedForward(data)
+print(netOutput)

@@ -89,42 +89,6 @@ class Network:
                                                 np.transpose(cuf.IntergrateBiasAndData(layerOutputs[i])))
         return weightGradients
 
-    def BatchGradientDecent(self, trainData, trainTargets, eta, itr,valData=None,valTargets=None,testData=None,testTargets=None):
-        for i in range(0,itr):
-            networkOutput,layerOutputs = self.FeedForward(trainData)
-            print('Loss:', self.LossFunction[self.lossFunction](networkOutput, trainTargets))
-            gradients = self.BackProbGradients(trainTargets, networkOutput, layerOutputs)
-            for j in range(0,self.noOfLayers+1):
-                self.weights[j]=self.weights[j]-eta*gradients[j]
-            if self.logDir!=None:
-                self.WriteLog(trainData, trainTargets, i, i, eta, valData, valTargets, testData, testTargets)
-
-    def MiniBatchGradientDecent(self, trainData, trainTargets, eta, itr, batchSize, valData=None, valTargets=None,
-                            testData=None, testTargets=None):
-        batchStart=0
-        step = 0
-        epoch = 0
-
-        for i in range(0, itr):
-            #batchSelection=np.random.choice(np.arange(trainData.shape[1]), batchSize)
-            step=step+1
-            batchData=trainData[:,batchStart:batchStart+batchSize]
-            batchTargets=trainTargets[:,batchStart:batchStart+batchSize]
-            batchStart=batchSize+batchStart
-            if(batchStart>trainData.shape[1]):
-                epoch=epoch+1
-                batchStart= batchStart-trainData.shape[1]
-                step=0
-            networkOutput, layerOutputs = self.FeedForward(batchData)
-            print('Loss:', self.LossFunction[self.lossFunction](networkOutput, batchTargets))
-            gradients = self.BackProbGradients(batchTargets, networkOutput, layerOutputs)
-            for j in range(0, self.noOfLayers + 1):
-                self.weights[j] = self.weights[j] - eta/batchSize * gradients[j]
-            if self.logDir != None and step%100==0:
-                self.WriteLog(trainData, trainTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
-
-
-
 
 
     ####################### Todo : function to be moved out of this class#####################################################

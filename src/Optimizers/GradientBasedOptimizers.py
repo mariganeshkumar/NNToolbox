@@ -102,8 +102,8 @@ def NestrovAccelaratedGradientDecent(net, trainData, trainTargets, itr, batchSiz
                 previousEpochValLoss, tempNet = HandleAneeling(net, valData, valTargets, previousEpochValLoss)
                 if tempNet !=None:
                     net=tempNet
-                    eta=eta/2
-                    gamma=gamma/2
+                    eta=eta*(99.0/100.0)
+                    #gamma=gamma/2
         print('Loss:', net.LossFunction[net.lossFunction](networkOutput, batchTargets))
         oldWeights=net.weights
         for j in range(0, net.noOfLayers + 1):
@@ -116,6 +116,43 @@ def NestrovAccelaratedGradientDecent(net, trainData, trainTargets, itr, batchSiz
             else:
                 deltaWeights[j] = eta / batchSize * gradients[j] + gamma *deltaWeights[j]
             net.weights[j] = oldWeights[j] - deltaWeights[j]
+        if net.logDir != None and step%100==0:
+            net.WriteLog(trainData, trainTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
+    return net
+
+def AdamOptimizer(net, trainData, trainTargets, itr, batchSize, eta=0.5, gamma=0.5,b1 = 0.9,b2 = 0.999, valData=None,
+                                        valTargets=None,testData=None, testTargets=None,annel=False):
+    mt=[None]* (net.noOfLayers + 1)
+    vt = [None] * (net.noOfLayers + 1)
+    batchStart = 0
+    step = 0
+    epoch = 0
+    previousEpochValLoss = np.inf
+    for i in range(0, itr):
+        step = step + 1
+        batchData = trainData[:, batchStart:batchStart + batchSize]
+        batchTargets = trainTargets[:, batchStart:batchStart + batchSize]
+        batchStart = batchSize + batchStart
+        networkOutput, layerOutputs = net.FeedForward(batchData)
+        if (batchStart >= trainData.shape[1]):
+            epoch = epoch + 1
+            batchStart = batchStart - trainData.shape[1]
+            step = 0
+            if annel and valData !=None:
+                previousEpochValLoss, tempNet = HandleAneeling(net, valData, valTargets, previousEpochValLoss)
+                if tempNet !=None:
+                    net=tempNet
+                    eta=eta/2
+        print('Loss:', net.LossFunction[net.lossFunction](networkOutput, batchTargets))
+        gradients = net.BackProbGradients(batchTargets, networkOutput, layerOutputs)
+        for j in range(0, net.noOfLayers + 1):
+            if mt[j] == None:
+                mt[j]= (1-b1)* gradients[j]
+                vt[j]= (1-b2) * np.square(gradients[j])
+            else:
+                mt[j] = b1*mt[j]+(1 - b1) * gradients[j]
+                vt[j] = b2*vt[j]+(1 - b2) * np.square(gradients[j])
+            net.weights[j] = net.weights[j] - (eta/batchSize)* np.multiply((1/np.sqrt(vt[j]+1e-8)), gradients[j])
         if net.logDir != None and step%100==0:
             net.WriteLog(trainData, trainTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
     return net
