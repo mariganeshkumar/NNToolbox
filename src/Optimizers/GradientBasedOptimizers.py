@@ -6,7 +6,7 @@ import pickle
 def BatchGradientDecent(net, trainData, trainTargets, eta, itr, valData=None, valTargets=None, testData=None, testTargets=None,annel=False):
     for i in range(0,itr):
         networkOutput,layerOutputs = net.FeedForward(trainData)
-        print('Loss:', net.LossFunction[net.lossFunction](networkOutput, trainTargets))
+        print('Loss:', net.LossFunction[net.lossFunctionName](networkOutput, trainTargets))
         gradients = net.BackProbGradients(trainTargets, networkOutput, layerOutputs)
         for j in range(0, net.noOfLayers+1):
             net.weights[j]= net.weights[j] - eta * gradients[j]
@@ -37,7 +37,7 @@ def MiniBatchGradientDecent(net, trainData, trainTargets,  itr, batchSize, eta=0
                     eta=eta/2
             step=0
         networkOutput, layerOutputs = net.FeedForward(batchData)
-        print('Loss:', net.LossFunction[net.lossFunction](networkOutput, batchTargets))
+        print('Loss:', net.LossFunction[net.lossFunctionNameName](networkOutput, batchTargets))
         gradients = net.BackProbGradients(batchTargets, networkOutput, layerOutputs)
         for j in range(0, net.noOfLayers + 1):
             net.weights[j] = net.weights[j] - eta / batchSize * gradients[j]
@@ -69,7 +69,7 @@ def MiniBatchGradientDecentWithMomentum(net, trainData, trainTargets, itr, batch
                     net=tempNet
                     eta=eta/2
                     gamma=gamma/2
-        print('Loss:', net.LossFunction[net.lossFunction](networkOutput, batchTargets))
+        print('Loss:', net.LossFunction[net.lossFunctionName](networkOutput, batchTargets))
         gradients = net.BackProbGradients(batchTargets, networkOutput, layerOutputs)
         for j in range(0, net.noOfLayers + 1):
             if deltaWeights[j] == None:
@@ -104,7 +104,7 @@ def NestrovAccelaratedGradientDecent(net, trainData, trainTargets, itr, batchSiz
                     net=tempNet
                     eta=eta*(99.0/100.0)
                     #gamma=gamma/2
-        print('Loss:', net.LossFunction[net.lossFunction](networkOutput, batchTargets))
+        print('Loss:', net.LossFunction[net.lossFunctionName](networkOutput, batchTargets))
         oldWeights=net.weights
         for j in range(0, net.noOfLayers + 1):
             if deltaWeights[j] != None:
@@ -143,7 +143,7 @@ def AdamOptimizer(net, trainData, trainTargets, itr, batchSize, eta=0.5,b1 = 0.9
                 if tempNet !=None:
                     net=tempNet
                     eta=eta/2
-        print('Loss:', net.LossFunction[net.lossFunction](networkOutput, batchTargets))
+        print('Loss:', net.LossFunction[net.lossFunctionName](networkOutput, batchTargets))
         gradients = net.BackProbGradients(batchTargets, networkOutput, layerOutputs)
         for j in range(0, net.noOfLayers + 1):
             if mt[j] == None:
@@ -159,7 +159,7 @@ def AdamOptimizer(net, trainData, trainTargets, itr, batchSize, eta=0.5,b1 = 0.9
 
 def HandleAneeling(net,valData,valTargets,previousEpochValLoss):
     valOuput, _ = net.FeedForward(valData)
-    presentValLoss = net.LossFunction[net.lossFunction](valOuput, valTargets)
+    presentValLoss = net.LossFunction[net.lossFunctionName](valOuput, valTargets)
     if presentValLoss < previousEpochValLoss:
         with open("/tmp/nnet_temp.pickle", "wb") as output_file:
             pickle.dump(net, output_file)
