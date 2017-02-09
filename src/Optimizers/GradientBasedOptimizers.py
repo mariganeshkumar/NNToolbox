@@ -120,7 +120,7 @@ def NestrovAccelaratedGradientDecent(net, trainData, trainTargets, itr, batchSiz
             net.WriteLog(trainData, trainTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
     return net
 
-def AdamOptimizer(net, trainData, trainTargets, itr, batchSize, eta=0.5, gamma=0.5,b1 = 0.9,b2 = 0.999, valData=None,
+def AdamOptimizer(net, trainData, trainTargets, itr, batchSize, eta=0.5,b1 = 0.9,b2 = 0.999, valData=None,
                                         valTargets=None,testData=None, testTargets=None,annel=False):
     mt=[None]* (net.noOfLayers + 1)
     vt = [None] * (net.noOfLayers + 1)
