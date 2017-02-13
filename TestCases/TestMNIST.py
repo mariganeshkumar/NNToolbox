@@ -3,6 +3,10 @@ from src.Network import Network
 from src.MnistHandler import MnistHandler as mh
 from src.Optimizers import GradientBasedOptimizers as gbo
 
+from sklearn.decomposition.pca import PCA
+# pca = PCA(n_components=392, whiten=True)
+
+
 
 
 trainData,valData,testData=mh.readMNISTData('../../Data/mnist.pkl.gz')
@@ -17,8 +21,13 @@ valTargets = np.transpose(np.eye(len(np.unique(valLabels)))[valLabels])
 testLabels=testData[1]
 testData=np.transpose(testData[0])
 testTargets = np.transpose(np.eye(len(np.unique(testLabels)))[testLabels])
-net = Network.Network([200, 200],['TanSigmoid','TanSigmoid','TanSigmoid','TanSigmoid','TanSigmoid','TanSigmoid','TanSigmoid'],'SoftMax','CrossEntropy',784,10,'/tmp')
-net=gbo.NestrovAccelaratedGradientDecent(net,trainData,trainTargets,20000,200,eta=0.5,gamma=0.1,
+
+# pca.fit(np.transpose(np.r_['-1',trainData,valData,testData]))
+# trainData=np.transpose(pca.transform(np.transpose(trainData)))
+# valData=np.transpose(pca.transform(np.transpose(valData)))
+# testData=np.transpose(pca.transform(np.transpose(testData)))
+net = Network.Network([200,200,200],['ReLU','ReLU','ReLU','ReLU','ReLU','TanSigmoid','TanSigmoid'],'SoftMax','CrossEntropy',trainData.shape[0],10,'/tmp')
+net=gbo.NestrovAccelaratedGradientDecent(net,trainData,trainTargets,200000,200,eta=0.2,gamma=0.05,
                                         valData=valData,valTargets=valTargets,testData=testData,testTargets=testTargets,
-                                        annel=True)
+                                        annel=True,regularization=True,lamda=0.1)
 print (valData.shape)

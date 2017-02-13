@@ -82,7 +82,7 @@ def MiniBatchGradientDecentWithMomentum(net, trainData, trainTargets, itr, batch
     return net
 
 def NestrovAccelaratedGradientDecent(net, trainData, trainTargets, itr, batchSize, eta=0.5, gamma=0.5, valData=None,
-                                        valTargets=None,testData=None, testTargets=None,annel=False):
+                                        valTargets=None,testData=None, testTargets=None,regularization=False,lamda=0.1,annel=False):
     deltaWeights=[None]* (net.noOfLayers + 1)
     batchStart = 0
     step = 0
@@ -102,7 +102,7 @@ def NestrovAccelaratedGradientDecent(net, trainData, trainTargets, itr, batchSiz
                 previousEpochValLoss, tempNet = HandleAneeling(net, valData, valTargets, previousEpochValLoss)
                 if tempNet !=None:
                     net=tempNet
-                    eta=eta*(99.0/100.0)
+                    eta=eta*(3.0/4.0)
                     #gamma=gamma/2
         print('Loss:', net.LossFunction[net.lossFunctionName](networkOutput, batchTargets))
         oldWeights=net.weights
@@ -111,6 +111,8 @@ def NestrovAccelaratedGradientDecent(net, trainData, trainTargets, itr, batchSiz
                 net.weights[j] = net.weights[j] - gamma * deltaWeights[j]
         gradients = net.BackProbGradients(batchTargets, networkOutput, layerOutputs)
         for j in range(0, net.noOfLayers + 1):
+            if regularization:
+                gradients[j]=gradients[j]+lamda* net.weights[j]
             if deltaWeights[j] == None:
                 deltaWeights[j]= eta / batchSize * gradients[j]
             else:
@@ -119,9 +121,9 @@ def NestrovAccelaratedGradientDecent(net, trainData, trainTargets, itr, batchSiz
         if net.logDir != None and step%100==0:
             net.WriteLog(trainData, trainTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
     return net
-
 def AdamOptimizer(net, trainData, trainTargets, itr, batchSize, eta=0.5,b1 = 0.9,b2 = 0.999, valData=None,
-                                        valTargets=None,testData=None, testTargets=None,annel=False):
+                                        valTargets=None,testData=None, testTargets=None,annel=False,
+                                        regularization=False,lamda=0.1):
     mt=[None]* (net.noOfLayers + 1)
     vt = [None] * (net.noOfLayers + 1)
     batchStart = 0
@@ -146,6 +148,8 @@ def AdamOptimizer(net, trainData, trainTargets, itr, batchSize, eta=0.5,b1 = 0.9
         print('Loss:', net.LossFunction[net.lossFunctionName](networkOutput, batchTargets))
         gradients = net.BackProbGradients(batchTargets, networkOutput, layerOutputs)
         for j in range(0, net.noOfLayers + 1):
+            if regularization:
+                gradients[j] += lamda * net.weights[j]
             if mt[j] == None:
                 mt[j]= (1-b1)* gradients[j]
                 vt[j]= (1-b2) * np.square(gradients[j])
