@@ -16,10 +16,11 @@ def BatchGradientDecent(net, trainData, trainTargets, eta, itr, valData=None, va
 
 
 def MiniBatchGradientDecent(net, trainData, trainTargets,  itr, batchSize, eta=0.5,valData=None, valTargets=None,
-                            testData=None, testTargets=None,annel=False):
+                            testData=None, testTargets=None,annel=False,regularization=False,lamda=0.1):
     batchStart=0
     step = 0
     epoch = 0
+    aneelCount=0
     previousEpochValLoss=np.inf
     for i in range(0, itr):
         #batchSelection=np.random.choice(np.arange(trainData.shape[1]), batchSize)
@@ -34,12 +35,17 @@ def MiniBatchGradientDecent(net, trainData, trainTargets,  itr, batchSize, eta=0
                 previousEpochValLoss,tempNet=HandleAneeling(net,valData,valTargets,previousEpochValLoss)
                 if tempNet !=None:
                     net=tempNet
-                    eta=eta/2
+                    eta=eta*3.0/4.0
+                    aneelCount += 1
+                    if aneelCount > 3:
+                        return net
             step=0
         networkOutput, layerOutputs = net.FeedForward(batchData)
         print('Loss:', net.LossFunction[net.lossFunctionNameName](networkOutput, batchTargets))
         gradients = net.BackProbGradients(batchTargets, networkOutput, layerOutputs)
         for j in range(0, net.noOfLayers + 1):
+            if regularization:
+                gradients[j]=gradients[j]+lamda* net.weights[j]
             net.weights[j] = net.weights[j] - eta / batchSize * gradients[j]
         if net.logDir != None and step%100==0:
             net.WriteLog(trainData, trainTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
@@ -47,11 +53,13 @@ def MiniBatchGradientDecent(net, trainData, trainTargets,  itr, batchSize, eta=0
 
 
 def MiniBatchGradientDecentWithMomentum(net, trainData, trainTargets, itr, batchSize, eta=0.5, gamma=0.5, valData=None,
-                                        valTargets=None,testData=None, testTargets=None,annel=False):
+                                        valTargets=None,testData=None, testTargets=None,annel=False,
+                                        regularization=False,lamda=0.1):
     deltaWeights=[None]* (net.noOfLayers + 1)
     batchStart = 0
     step = 0
     epoch = 0
+    aneelCount = 0
     previousEpochValLoss = np.inf
     for i in range(0, itr):
         step = step + 1
@@ -67,11 +75,15 @@ def MiniBatchGradientDecentWithMomentum(net, trainData, trainTargets, itr, batch
                 previousEpochValLoss, tempNet = HandleAneeling(net, valData, valTargets, previousEpochValLoss)
                 if tempNet !=None:
                     net=tempNet
-                    eta=eta/2
-                    gamma=gamma/2
+                    eta=eta*3.0/4.0
+                    aneelCount += 1
+                    if aneelCount >3:
+                        return net
         print('Loss:', net.LossFunction[net.lossFunctionName](networkOutput, batchTargets))
         gradients = net.BackProbGradients(batchTargets, networkOutput, layerOutputs)
         for j in range(0, net.noOfLayers + 1):
+            if regularization:
+                gradients[j]=gradients[j]+lamda* net.weights[j]
             if deltaWeights[j] == None:
                 deltaWeights[j]= eta / batchSize * gradients[j]
             else:
@@ -82,12 +94,14 @@ def MiniBatchGradientDecentWithMomentum(net, trainData, trainTargets, itr, batch
     return net
 
 def NestrovAccelaratedGradientDecent(net, trainData, trainTargets, itr, batchSize, eta=0.5, gamma=0.5, valData=None,
-                                        valTargets=None,testData=None, testTargets=None,regularization=False,lamda=0.1,annel=False):
+                                        valTargets=None,testData=None, testTargets=None,regularization=False,lamda=0.1,
+                                     annel=False):
     deltaWeights=[None]* (net.noOfLayers + 1)
     batchStart = 0
     step = 0
     epoch = 0
     previousEpochValLoss = np.inf
+    aneelCount = 0
     for i in range(0, itr):
         step = step + 1
         batchData = trainData[:, batchStart:batchStart + batchSize]
@@ -103,7 +117,9 @@ def NestrovAccelaratedGradientDecent(net, trainData, trainTargets, itr, batchSiz
                 if tempNet !=None:
                     net=tempNet
                     eta=eta*(3.0/4.0)
-                    #gamma=gamma/2
+                    aneelCount += 1
+                    if aneelCount > 3:
+                        return net
         print('Loss:', net.LossFunction[net.lossFunctionName](networkOutput, batchTargets))
         oldWeights=net.weights
         for j in range(0, net.noOfLayers + 1):
@@ -121,6 +137,7 @@ def NestrovAccelaratedGradientDecent(net, trainData, trainTargets, itr, batchSiz
         if net.logDir != None and step%100==0:
             net.WriteLog(trainData, trainTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
     return net
+
 def AdamOptimizer(net, trainData, trainTargets, itr, batchSize, eta=0.5,b1 = 0.9,b2 = 0.999, valData=None,
                                         valTargets=None,testData=None, testTargets=None,annel=False,
                                         regularization=False,lamda=0.1):
@@ -129,6 +146,7 @@ def AdamOptimizer(net, trainData, trainTargets, itr, batchSize, eta=0.5,b1 = 0.9
     batchStart = 0
     step = 0
     epoch = 0
+    aneelCount = 0
     previousEpochValLoss = np.inf
     for i in range(0, itr):
         step = step + 1
@@ -144,7 +162,10 @@ def AdamOptimizer(net, trainData, trainTargets, itr, batchSize, eta=0.5,b1 = 0.9
                 previousEpochValLoss, tempNet = HandleAneeling(net, valData, valTargets, previousEpochValLoss)
                 if tempNet !=None:
                     net=tempNet
-                    eta=eta/2
+                    eta=eta*3.0/4.0
+                    aneelCount += 1
+                    if aneelCount > 3:
+                        return net
         print('Loss:', net.LossFunction[net.lossFunctionName](networkOutput, batchTargets))
         gradients = net.BackProbGradients(batchTargets, networkOutput, layerOutputs)
         for j in range(0, net.noOfLayers + 1):
