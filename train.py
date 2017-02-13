@@ -43,6 +43,12 @@ parser.add_argument("--expt_dir",
 parser.add_argument("--mnist",
                     help="path to the mnist data in pickeled format 2",
                     type=str)
+parser.add_argument("--epochs",
+                    help="Maximum no of epochs on data ",
+                    type=str)
+parser.add_argument("--lamda",
+                    help="Regularization rate. By default 0",
+                    type=str)
 
 
 #parser.add_argument("--momentum",help="momentum to be used by momentum based algorithms",type=float)
@@ -103,8 +109,12 @@ if(args.expt_dir==None ):
 #     print("Please provide size of each hidden layers and try again. try using option -h for help")
 #     exit(0)
 
-
-epochs=3
+if(args.epochs==None ):
+    print("Maximum no of epochs not provided. assuming 100 by default")
+    args.epochs=100
+if(args.lamda==None ):
+    print("L2 regularization rate not provided. assuming 0 by default (no regularization)")
+    args.lamda=0
 
 
 trainData,valData,testData=mh.readMNISTData(args.mnist)
@@ -122,9 +132,31 @@ testTargets = np.transpose(np.eye(len(np.unique(testLabels)))[testLabels])
 net = Network.Network(args.sizes,args.activation,'SoftMax',args.loss,trainData.shape[0],trainTargets.shape[0],args.expt_dir)
 
 if args.opt=="nag":
-    net=gbo.NestrovAccelaratedGradientDecent(net,trainData,trainTargets,int(trainTargets.shape[1]/args.batch_size)*epochs,args.batch_size,eta=args.lr,gamma=args.momentum,
-                                        valData=valData,valTargets=valTargets,testData=testData,testTargets=testTargets,
-                                        annel=args.anneal)
+    net=gbo.NestrovAccelaratedGradientDecent(net,trainData,trainTargets,
+                                             int(trainTargets.shape[1]/args.batch_size)*args.epochs,args.batch_size,
+                                             eta=args.lr,gamma=args.momentum,valData=valData,valTargets=valTargets,
+                                             testData=testData,testTargets=testTargets,annel=args.anneal,
+                                             regularization=True,lamda=args.lamda)
+elif args.opt=="adam":
+    net=gbo.AdamOptimizer(net,trainData,trainTargets,
+                                             int(trainTargets.shape[1]/args.batch_size)*args.epochs,args.batch_size,
+                                             eta=args.lr,valData=valData,valTargets=valTargets,
+                                             testData=testData,testTargets=testTargets,annel=args.anneal,
+                                             regularization=True,lamda=args.lamda)
+elif args.opt=="momentum":
+    net=gbo.MiniBatchGradientDecentWithMomentum(net,trainData,trainTargets,
+                                             int(trainTargets.shape[1]/args.batch_size)*args.epochs,args.batch_size,
+                                             eta=args.lr,gamma=args.momentum,valData=valData,valTargets=valTargets,
+                                             testData=testData,testTargets=testTargets,annel=args.anneal,
+                                             regularization=True,lamda=args.lamda)
+else :
+    net = gbo.MiniBatchGradientDecent(net, trainData, trainTargets,
+                                                  int(trainTargets.shape[1] / args.batch_size) * args.epochs,
+                                                  args.batch_size,
+                                                  eta=args.lr, valData=valData, valTargets=valTargets,
+                                                  testData=testData, testTargets=testTargets, annel=args.anneal,
+                                                  regularization=True, lamda=args.lamda)
+
 validPrediction,_=net.FeedForward(valData)
 validPrediction = np.argmax(validPrediction, 0)
 testPrediction,_=net.FeedForward(testData)
@@ -143,5 +175,5 @@ else:
     biases = [None] * (len(args.sizes)+1)
     for i in range(0,len(net.weights)):
         weights[i],biases[i]=cuf.DisIntergrateBiasFromWeights(net.weights[i],biasRequired=True)
-    with open(args.save_dir+"/model.pickle", "w") as output_file:
+    with open(args.save_dir+"/FinalTrainedModel.pickle", "w") as output_file:
         pickle.dump([weights,biases], output_file)

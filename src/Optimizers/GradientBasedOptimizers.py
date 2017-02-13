@@ -186,10 +186,10 @@ def HandleAneeling(net,valData,valTargets,previousEpochValLoss):
     valOuput, _ = net.FeedForward(valData)
     presentValLoss = net.LossFunction[net.lossFunctionName](valOuput, valTargets)
     if presentValLoss < previousEpochValLoss:
-        with open("/tmp/nnet_temp.pickle", "wb") as output_file:
+        with open(net.logDir+"/nnet_temp.pickle", "wb") as output_file:
             pickle.dump(net, output_file)
         return presentValLoss,None
     else:
-        with open("/tmp/nnet_temp.pickle", "rb") as input_file:
+        with open(net.logDir+"/nnet_temp.pickle", "rb") as input_file:
             net = pickle.load(input_file)
         return previousEpochValLoss,net
