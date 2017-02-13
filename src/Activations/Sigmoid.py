@@ -33,6 +33,13 @@ def TanSigmoid(data,weights,validationRequired=True):
     preActivation=np.matmul(weights,data)
     return np.divide(np.exp(preActivation)-np.exp(-1*preActivation),np.exp(preActivation)+np.exp(-1*preActivation))
 
+def ReLU(data,weights,validationRequired=True):
+    if validationRequired:
+        ValidateDimensions(data, weights)
+    preActivation=np.matmul(weights,data)
+    return np.maximum(preActivation,0)
+
+
 #######################################Sigmoid Gradiants###############################################################
 
 
@@ -51,6 +58,12 @@ def TanSigmoidGradients(activations, gradients, validationRequired=True):
         cuf.ValidateDimensionsWithActivationAndGradients(activations, gradients)
     return np.multiply(np.multiply(gradients, (1 + activations)), (1 - activations))
 
+def ReLUGradients(activations, gradients, validationRequired=True):
+    if validationRequired:
+        cuf.ValidateDimensionsWithActivationAndGradients(activations, gradients)
+        reluGradient=activations
+        reluGradient[np.greater(activations,0)]=1
+    return np.multiply(gradients, reluGradient)
 
 #######################################################################################################################
 

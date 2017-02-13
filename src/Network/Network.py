@@ -29,10 +29,12 @@ class Network:
         self.Activation = {
             'LogSigmoid': Sigmoid.LogSigmoid,
             'TanSigmoid': Sigmoid.TanSigmoid,
+            'ReLU': Sigmoid.ReLU,
         }
         self.ActivationGradients = {
             'LogSigmoid': Sigmoid.LogSigmoidGradients,
             'TanSigmoid': Sigmoid.TanSigmoidGradients,
+            'ReLU': Sigmoid.ReLUGradients,
         }
         self.OutputFunction = {
             'SoftMax': SoftMax.SoftMax,
