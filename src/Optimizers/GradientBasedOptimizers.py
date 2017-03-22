@@ -41,7 +41,7 @@ def MiniBatchGradientDecent(net, trainData, trainTargets,  itr, batchSize, eta=0
                         return net
             step=0
         networkOutput, layerOutputs = net.FeedForward(batchData)
-        print('Loss:', net.LossFunction[net.lossFunctionNameName](networkOutput, batchTargets))
+        print('Loss:', net.LossFunction[net.lossFunctionName](networkOutput, batchTargets))
         gradients = net.BackProbGradients(batchTargets, networkOutput, layerOutputs)
         for j in range(0, net.noOfLayers + 1):
             if regularization:
@@ -79,7 +79,7 @@ def MiniBatchGradientDecentWithMomentum(net, trainData, trainTargets, itr, batch
                     aneelCount += 1
                     if aneelCount >3:
                         return net
-        print('Loss:', net.LossFunction[net.lossFunctionName](networkOutput, batchTargets))
+        print('Mini Batch Loss:', net.LossFunction[net.lossFunctionName](networkOutput, batchTargets))
         gradients = net.BackProbGradients(batchTargets, networkOutput, layerOutputs)
         for j in range(0, net.noOfLayers + 1):
             if regularization:
@@ -120,7 +120,7 @@ def NestrovAccelaratedGradientDecent(net, trainData, trainTargets, itr, batchSiz
                     aneelCount += 1
                     if aneelCount > 3:
                         return net
-        print('Loss:', net.LossFunction[net.lossFunctionName](networkOutput, batchTargets))
+        print('Mini Batch Loss:', net.LossFunction[net.lossFunctionName](networkOutput, batchTargets))
         oldWeights=net.weights
         for j in range(0, net.noOfLayers + 1):
             if deltaWeights[j] != None:
@@ -166,7 +166,7 @@ def AdamOptimizer(net, trainData, trainTargets, itr, batchSize, eta=0.5,b1 = 0.9
                     aneelCount += 1
                     if aneelCount > 3:
                         return net
-        print('Loss:', net.LossFunction[net.lossFunctionName](networkOutput, batchTargets))
+        print('Mini Batch Loss:', net.LossFunction[net.lossFunctionName](networkOutput, batchTargets))
         gradients = net.BackProbGradients(batchTargets, networkOutput, layerOutputs)
         for j in range(0, net.noOfLayers + 1):
             if regularization:

@@ -45,10 +45,10 @@ parser.add_argument("--mnist",
                     type=str)
 parser.add_argument("--epochs",
                     help="Maximum no of epochs on data ",
-                    type=str)
+                    type=int)
 parser.add_argument("--lamda",
                     help="Regularization rate. By default 0",
-                    type=str)
+                    type=float)
 
 
 #parser.add_argument("--momentum",help="momentum to be used by momentum based algorithms",type=float)
@@ -76,6 +76,8 @@ if args.activation == "sigmoid":
     args.activation="LogSigmoid"
 elif args.activation== "tanh":
     args.activation="TanSigmoid"
+elif args.activation == "relu":
+    args.activation = "ReLU"
 else :
     print("Invalid activations of hidden layers provided. assuming sigmoid by default")
     args.activation = "LogSigmoid"
@@ -86,9 +88,10 @@ if(args.loss==None ):
     exit(0)
 if args.loss == "sq":
     args.loss= "SquaredError"
+    outAct="PureLin"
 else:
     args.loss= "CrossEntropy"
-
+    outAct="SoftMax"
 if args.opt not in ['adam','nag','gd','momentum']:
     print("Invalid optimizer provided. try using option -h for help")
     exit(0)
@@ -110,8 +113,8 @@ if(args.expt_dir==None ):
 #     exit(0)
 
 if(args.epochs==None ):
-    print("Maximum no of epochs not provided. assuming 100 by default")
-    args.epochs=100
+    print("Maximum no of epochs not provided. assuming 200 by default")
+    args.epochs=200
 if(args.lamda==None ):
     print("L2 regularization rate not provided. assuming 0 by default (no regularization)")
     args.lamda=0
@@ -129,7 +132,7 @@ valTargets = np.transpose(np.eye(len(np.unique(valLabels)))[valLabels])
 testLabels=testData[1]
 testData=np.transpose(testData[0])
 testTargets = np.transpose(np.eye(len(np.unique(testLabels)))[testLabels])
-net = Network.Network(args.sizes,args.activation,'SoftMax',args.loss,trainData.shape[0],trainTargets.shape[0],args.expt_dir)
+net = Network.Network(args.sizes,args.activation,outAct,args.loss,trainData.shape[0],trainTargets.shape[0],args.expt_dir)
 
 if args.opt=="nag":
     net=gbo.NestrovAccelaratedGradientDecent(net,trainData,trainTargets,
@@ -160,6 +163,7 @@ else :
 validPrediction,_=net.FeedForward(valData)
 validPrediction = np.argmax(validPrediction, 0)
 testPrediction,_=net.FeedForward(testData)
+print("Final Test ER:",net.accuracy(testPrediction,testTargets))
 testPrediction = np.argmax(testPrediction, 0)
 outfile = open(args.expt_dir+'/valid_prediction.txt', "w+")
 outfile.write("\n".join(map(str,validPrediction)))
