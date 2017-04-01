@@ -48,7 +48,7 @@ def MiniBatchGradientDecent(net, trainData, trainTargets,  itr, batchSize, eta=0
                 gradients[j]=gradients[j]+lamda* net.weights[j]
             net.weights[j] = net.weights[j] - eta / batchSize * gradients[j]
         if net.logDir != None and step%100==0:
-            net.WriteLog(trainData, trainTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
+            net.WriteLog(batchData, batchTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
     return net
 
 
@@ -90,7 +90,7 @@ def MiniBatchGradientDecentWithMomentum(net, trainData, trainTargets, itr, batch
                 deltaWeights[j] = eta / batchSize * gradients[j] + gamma *deltaWeights[j]
             net.weights[j] = net.weights[j] - deltaWeights[j]
         if net.logDir != None and step%100==0:
-            net.WriteLog(trainData, trainTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
+            net.WriteLog(batchData, batchTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
     return net
 
 def NestrovAccelaratedGradientDecent(net, trainData, trainTargets, itr, batchSize, eta=0.5, gamma=0.5, valData=None,
@@ -135,7 +135,7 @@ def NestrovAccelaratedGradientDecent(net, trainData, trainTargets, itr, batchSiz
                 deltaWeights[j] = eta / batchSize * gradients[j] + gamma *deltaWeights[j]
             net.weights[j] = oldWeights[j] - deltaWeights[j]
         if net.logDir != None and step%100==0:
-            net.WriteLog(trainData, trainTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
+            net.WriteLog(batchData, batchTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
     return net
 
 def AdamOptimizer(net, trainData, trainTargets, itr, batchSize, eta=0.5,b1 = 0.9,b2 = 0.999, valData=None,
@@ -179,7 +179,7 @@ def AdamOptimizer(net, trainData, trainTargets, itr, batchSize, eta=0.5,b1 = 0.9
                 vt[j] = b2*vt[j]+(1 - b2) * np.square(gradients[j])
             net.weights[j] = net.weights[j] - (eta/batchSize)* np.multiply((1/np.sqrt(vt[j]+1e-8)), gradients[j])
         if net.logDir != None and step%100==0:
-            net.WriteLog(trainData, trainTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
+            net.WriteLog(batchData, batchTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
     return net
 
 def HandleAneeling(net,valData,valTargets,previousEpochValLoss):
