@@ -1,5 +1,6 @@
 import numpy as np
 import pickle
+import src.Utility.LogsUtiltityFunctions as LUF
 
 
 
@@ -11,7 +12,7 @@ def BatchGradientDecent(net, trainData, trainTargets, eta, itr, valData=None, va
         for j in range(0, net.noOfLayers+1):
             net.weights[j]= net.weights[j] - eta * gradients[j]
         if net.logDir!=None and i%100==0 :
-            net.WriteLog(trainData, trainTargets, i, i, eta, valData, valTargets, testData, testTargets)
+            LUF.WriteLog(net, trainData, trainTargets, i, i, eta, valData, valTargets, testData, testTargets)
     return net
 
 
@@ -48,7 +49,7 @@ def MiniBatchGradientDecent(net, trainData, trainTargets,  itr, batchSize, eta=0
                 gradients[j]=gradients[j]+lamda* net.weights[j]
             net.weights[j] = net.weights[j] - eta / batchSize * gradients[j]
         if net.logDir != None and step%100==0:
-            net.WriteLog(batchData, batchTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
+            LUF.WriteLog(net, batchData, batchTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
     return net
 
 
@@ -90,7 +91,7 @@ def MiniBatchGradientDecentWithMomentum(net, trainData, trainTargets, itr, batch
                 deltaWeights[j] = eta / batchSize * gradients[j] + gamma *deltaWeights[j]
             net.weights[j] = net.weights[j] - deltaWeights[j]
         if net.logDir != None and step%100==0:
-            net.WriteLog(batchData, batchTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
+            LUF.WriteLog(net, batchData, batchTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
     return net
 
 def NestrovAccelaratedGradientDecent(net, trainData, trainTargets, itr, batchSize, eta=0.5, gamma=0.5, valData=None,
@@ -135,7 +136,7 @@ def NestrovAccelaratedGradientDecent(net, trainData, trainTargets, itr, batchSiz
                 deltaWeights[j] = eta / batchSize * gradients[j] + gamma *deltaWeights[j]
             net.weights[j] = oldWeights[j] - deltaWeights[j]
         if net.logDir != None and step%100==0:
-            net.WriteLog(batchData, batchTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
+            LUF.WriteLog(net, batchData, batchTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
     return net
 
 def AdamOptimizer(net, trainData, trainTargets, itr, batchSize, eta=0.5,b1 = 0.9,b2 = 0.999, valData=None,
@@ -179,8 +180,52 @@ def AdamOptimizer(net, trainData, trainTargets, itr, batchSize, eta=0.5,b1 = 0.9
                 vt[j] = b2*vt[j]+(1 - b2) * np.square(gradients[j])
             net.weights[j] = net.weights[j] - (eta/batchSize)* np.multiply((1/np.sqrt(vt[j]+1e-8)), gradients[j])
         if net.logDir != None and step%100==0:
-            net.WriteLog(batchData, batchTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
+            LUF.WriteLog(net, batchData, batchTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
     return net
+
+
+############################## Pre Training Implementation ############################################################
+
+# def PreTrainNetwork(net, trainData, itr, batchSize, eta=0.5, gamma=0.5, valData=None,
+#                                         valTargets=None,testData=None, testTargets=None,annel=False,
+#                                         regularization=False,lamda=0.1):
+#     deltaWeights=[None]* (net.noOfLayers + 1)
+#     batchStart = 0
+#     step = 0
+#     epoch = 0
+#     aneelCount = 0
+#     previousEpochValLoss = np.inf
+#     for i in range(0, itr):
+#         step = step + 1
+#         batchData = trainData[:, batchStart:batchStart + batchSize]
+#         batchTargets = trainTargets[:, batchStart:batchStart + batchSize]
+#         batchStart = batchSize + batchStart
+#         networkOutput, layerOutputs = net.FeedForward(batchData)
+#         if (batchStart >= trainData.shape[1]):
+#             epoch = epoch + 1
+#             batchStart = batchStart - trainData.shape[1]
+#             step = 0
+#             if annel and valData !=None:
+#                 previousEpochValLoss, tempNet = HandleAneeling(net, valData, valTargets, previousEpochValLoss)
+#                 if tempNet !=None:
+#                     net=tempNet
+#                     eta=eta*3.0/4.0
+#                     aneelCount += 1
+#                     if aneelCount >3:
+#                         return net
+#         print('Mini Batch Loss:', net.LossFunction[net.lossFunctionName](networkOutput, batchTargets))
+#         gradients = net.BackProbGradients(batchTargets, networkOutput, layerOutputs)
+#         for j in range(0, net.noOfLayers + 1):
+#             if regularization:
+#                 gradients[j]=gradients[j]+lamda* net.weights[j]
+#             if deltaWeights[j] == None:
+#                 deltaWeights[j]= eta / batchSize * gradients[j]
+#             else:
+#                 deltaWeights[j] = eta / batchSize * gradients[j] + gamma *deltaWeights[j]
+#             net.weights[j] = net.weights[j] - deltaWeights[j]
+#         if net.logDir != None and step%100==0:
+#             LUF.WriteLog(net, batchData, batchTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
+#     return net
 
 def HandleAneeling(net,valData,valTargets,previousEpochValLoss):
     valOuput, _ = net.FeedForward(valData)

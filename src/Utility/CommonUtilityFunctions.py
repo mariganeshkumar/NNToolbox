@@ -1,3 +1,4 @@
+import numpy
 import numpy as np
 
 
@@ -66,3 +67,8 @@ def DisIntergrateBiasFromWeights(weights,biasRequired=False):
         return weightsWithoutBias,biases
     else:
         return weightsWithoutBias
+
+
+def accuracy(predictions, labels):
+    return (100.0 * np.sum(np.argmax(predictions, 0) != np.argmax(labels, 0))
+            / predictions.shape[1])
