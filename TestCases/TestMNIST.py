@@ -26,7 +26,8 @@ testTargets = np.transpose(np.eye(len(np.unique(testLabels)))[testLabels])
 # trainData=np.transpose(pca.transform(np.transpose(trainData)))
 # valData=np.transpose(pca.transform(np.transpose(valData)))
 # testData=np.transpose(pca.transform(np.transpose(testData)))
-net = Network.Network([200,200,200],['ReLU','ReLU','ReLU','ReLU','ReLU','TanSigmoid','TanSigmoid'],'SoftMax','CrossEntropy',trainData.shape[0],10,'/tmp')
+net = Network.Network([200,200,200],['TanSigmoid','TanSigmoid','TanSigmoid','ReLU','ReLU','TanSigmoid','TanSigmoid'],'SoftMax','CrossEntropy',trainData.shape[0],10,'/tmp')
+net=gbo.PreTrainNetwork(net,trainData,20000,200,0.01,0.05,valData=valData,annel=True,regularization=True,lamda=0.1)
 net=gbo.NestrovAccelaratedGradientDecent(net,trainData,trainTargets,200000,200,eta=0.2,gamma=0.05,
                                         valData=valData,valTargets=valTargets,testData=testData,testTargets=testTargets,
                                         annel=True,regularization=True,lamda=0.1)
