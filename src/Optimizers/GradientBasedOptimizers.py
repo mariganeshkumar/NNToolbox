@@ -11,7 +11,7 @@ def BatchGradientDecent(net, trainData, trainTargets, eta, itr, valData=None, va
         gradients = net.BackProbGradients(trainTargets, networkOutput, layerOutputs)
         for j in range(0, net.noOfLayers+1):
             net.weights[j]= net.weights[j] - eta * gradients[j]
-        if net.logDir!=None and i%100==0 :
+        if net.logDir!=None and i%250==0 :
             LUF.WriteLog(net, trainData, trainTargets, i, i, eta, valData, valTargets, testData, testTargets)
     return net
 
@@ -48,7 +48,7 @@ def MiniBatchGradientDecent(net, trainData, trainTargets,  itr, batchSize, eta=0
             if regularization:
                 gradients[j]=gradients[j]+lamda* net.weights[j]
             net.weights[j] = net.weights[j] - eta / batchSize * gradients[j]
-        if net.logDir != None and step%100==0:
+        if net.logDir != None and step%250==0:
             LUF.WriteLog(net, batchData, batchTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
     return net
 
@@ -90,7 +90,7 @@ def MiniBatchGradientDecentWithMomentum(net, trainData, trainTargets, itr, batch
             else:
                 deltaWeights[j] = eta / batchSize * gradients[j] + gamma *deltaWeights[j]
             net.weights[j] = net.weights[j] - deltaWeights[j]
-        if net.logDir != None and step%100==0:
+        if net.logDir != None and step%250==0:
             LUF.WriteLog(net, batchData, batchTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
     return net
 
@@ -135,7 +135,7 @@ def NestrovAccelaratedGradientDecent(net, trainData, trainTargets, itr, batchSiz
             else:
                 deltaWeights[j] = eta / batchSize * gradients[j] + gamma *deltaWeights[j]
             net.weights[j] = oldWeights[j] - deltaWeights[j]
-        if net.logDir != None and step%100==0:
+        if net.logDir != None and step%250==0:
             LUF.WriteLog(net, batchData, batchTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
     return net
 
@@ -179,7 +179,7 @@ def AdamOptimizer(net, trainData, trainTargets, itr, batchSize, eta=0.5,b1 = 0.9
                 mt[j] = b1*mt[j]+(1 - b1) * gradients[j]
                 vt[j] = b2*vt[j]+(1 - b2) * np.square(gradients[j])
             net.weights[j] = net.weights[j] - (eta/batchSize)* np.multiply((1/np.sqrt(vt[j]+1e-8)), gradients[j])
-        if net.logDir != None and step%100==0:
+        if net.logDir != None and step%250==0:
             LUF.WriteLog(net, batchData, batchTargets, step, epoch, eta, valData, valTargets, testData, testTargets)
     return net
 
@@ -190,16 +190,15 @@ def PreTrainNetwork(net, trainData, itr, batchSize, eta=0.5, gamma=0.5, valData=
                                         regularization=False,lamda=0.1):
     for i in range(0,net.noOfLayers):
         print('Layer ' + str(i) + ' Pretraining')
-        preTrainNet=Network([net.hiddenLayers[i]],[net.activationFunctionNames[i]],'PureLin',
+        preTrainNet=Network(net.hiddenLayers[:i+1],net.activationFunctionNames[:i+1],'PureLin',
                             'SquaredError',trainData.shape[0],trainData.shape[0],'/tmp');
+        for j in range(0,i):
+            preTrainNet.weights[j]=net.weights[j]
         preTrainNet=MiniBatchGradientDecentWithMomentum(preTrainNet,trainData,trainData,itr,batchSize,
                                                         eta=eta,gamma=gamma,valData=valData,valTargets=valData,
                                                         annel=annel,regularization=regularization,lamda=lamda)
-        _,layerOutputs=preTrainNet.FeedForward(trainData)
-        trainData=layerOutputs[1]
-        _, layerOutputs = preTrainNet.FeedForward(valData)
-        valData = layerOutputs[1]
-        net.weights[i]=preTrainNet.weights[0]
+        for j in range(0, i+1):
+            net.weights[j]=preTrainNet.weights[j]
     return net
 
 def HandleAneeling(net,valData,valTargets,previousEpochValLoss):
