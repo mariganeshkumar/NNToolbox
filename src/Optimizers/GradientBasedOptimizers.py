@@ -11,7 +11,7 @@ def BatchGradientDecent(net, trainData, trainTargets, eta, itr, valData=None, va
         print('Loss:', net.LossFunction[net.lossFunctionName](networkOutput, trainTargets))
         gradients = net.BackProbGradients(trainTargets, networkOutput, layerOutputs)
         for j in range(0, net.noOfLayers+1):
-            net.weights[j]= net.weights[j] - eta * gradients[j]
+            net.weights[j]= net.weights[j] - (eta / trainData.shape[1]) * gradients[j]
         if net.logDir!=None and i%250==0 :
             LUF.WriteLog(net, trainData, trainTargets, i, i, eta, valData, valTargets, testData, testTargets)
     return net
@@ -227,9 +227,10 @@ def SetInitialETA(net, batchData, batchTargets, eta, gamma=None):
         networkOutput, layerOutputs = net.FeedForward(batchData)
         gradients = net.BackProbGradients(batchTargets, networkOutput, layerOutputs)
         for j in range(0, net.noOfLayers + 1):
-            net.weights[j] = net.weights[j] - eta * gradients[j]
+            net.weights[j] = net.weights[j] -  (eta / batchData.shape[1]) * gradients[j]
         networkOutput, _ = net.FeedForward(batchData)
         loss=net.LossFunction[net.lossFunctionName](networkOutput, batchTargets)
+        print('loss: ' + str(loss) + ' ' + 'previous Loss' + str(previousLoss))
         if loss<previousLoss:
             break
         else:
