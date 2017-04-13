@@ -187,11 +187,11 @@ def AdamOptimizer(net, trainData, trainTargets, itr, batchSize, eta=0.5,b1 = 0.9
 ############################## Pre Training Implementation ############################################################
 
 def PreTrainNetwork(net, trainData, itr, batchSize, eta=0.5, gamma=0.5, valData=None,annel=False,
-                                        regularization=False,lamda=0.1):
+                                        regularization=False,lamda=0.1,logDir='/tmp'):
     for i in range(0,net.noOfLayers):
         print('Layer ' + str(i) + ' Pretraining')
         preTrainNet=Network(net.hiddenLayers[:i+1],net.activationFunctionNames[:i+1],'PureLin',
-                            'SquaredError',trainData.shape[0],trainData.shape[0],'/tmp');
+                            'SquaredError',trainData.shape[0],trainData.shape[0],logDir);
         for j in range(0,i):
             preTrainNet.weights[j]=net.weights[j]
         preTrainNet=MiniBatchGradientDecentWithMomentum(preTrainNet,trainData,trainData,itr,batchSize,
