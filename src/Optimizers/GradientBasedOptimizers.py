@@ -5,6 +5,7 @@ from src.Network.Network import Network
 
 
 def BatchGradientDecent(net, trainData, trainTargets, eta, itr, valData=None, valTargets=None, testData=None, testTargets=None,annel=False):
+    eta, _ = SetInitialETA(net, trainData, trainTargets, eta)
     for i in range(0,itr):
         networkOutput,layerOutputs = net.FeedForward(trainData)
         print('Loss:', net.LossFunction[net.lossFunctionName](networkOutput, trainTargets))
@@ -23,6 +24,7 @@ def MiniBatchGradientDecent(net, trainData, trainTargets,  itr, batchSize, eta=0
     epoch = 0
     aneelCount=0
     previousEpochValLoss=np.inf
+    eta, _ = SetInitialETA(net, trainData[:, 0:batchSize], trainTargets[:, 0:batchSize], eta)
     for i in range(0, itr):
         #batchSelection=np.random.choice(np.arange(trainData.shape[1]), batchSize)
         step=step+1
@@ -62,6 +64,7 @@ def MiniBatchGradientDecentWithMomentum(net, trainData, trainTargets, itr, batch
     epoch = 0
     aneelCount = 0
     previousEpochValLoss = np.inf
+    eta,gamma=SetInitialETA(net,trainData[:,0:batchSize],trainTargets[:,0:batchSize],eta,gamma)
     for i in range(0, itr):
         step = step + 1
         batchData = trainData[:, batchStart:batchStart + batchSize]
@@ -103,6 +106,7 @@ def NestrovAccelaratedGradientDecent(net, trainData, trainTargets, itr, batchSiz
     epoch = 0
     previousEpochValLoss = np.inf
     aneelCount = 0
+    eta, gamma = SetInitialETA(net, trainData[:, 0:batchSize], trainTargets[:, 0:batchSize], eta, gamma)
     for i in range(0, itr):
         step = step + 1
         batchData = trainData[:, batchStart:batchStart + batchSize]
@@ -149,6 +153,7 @@ def AdamOptimizer(net, trainData, trainTargets, itr, batchSize, eta=0.5,b1 = 0.9
     epoch = 0
     aneelCount = 0
     previousEpochValLoss = np.inf
+    eta, _ = SetInitialETA(net, trainData[:, 0:batchSize], trainTargets[:, 0:batchSize], eta)
     for i in range(0, itr):
         step = step + 1
         batchData = trainData[:, batchStart:batchStart + batchSize]
@@ -212,3 +217,26 @@ def HandleAneeling(net,valData,valTargets,previousEpochValLoss):
         with open(net.logDir+"/nnet_temp.pickle", "rb") as input_file:
             net = pickle.load(input_file)
         return previousEpochValLoss,net
+
+
+def SetInitialETA(net, batchData, batchTargets, eta, gamma=None):
+    networkOutput, _ = net.FeedForward(batchData)
+    previousLoss=net.LossFunction[net.lossFunctionName](networkOutput, batchTargets)
+    previousWeights=net.weights[:];
+    while 1:
+        networkOutput, layerOutputs = net.FeedForward(batchData)
+        gradients = net.BackProbGradients(batchTargets, networkOutput, layerOutputs)
+        for j in range(0, net.noOfLayers + 1):
+            net.weights[j] = net.weights[j] - eta * gradients[j]
+        networkOutput, _ = net.FeedForward(batchData)
+        loss=net.LossFunction[net.lossFunctionName](networkOutput, batchTargets)
+        if loss<previousLoss:
+            break
+        else:
+            net.weights=previousWeights[:]
+            eta=eta*(3.0/4.0)
+            if gamma!=None:
+                gamma=gamma*(3.0/4.0)
+            print('Reducing Learning Rate to' + str(eta))
+    return eta,gamma
+
